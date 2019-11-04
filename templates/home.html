@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>First Flask App</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="//cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+table.dataTable thead .sorting:after,
+table.dataTable thead .sorting:before,
+table.dataTable thead .sorting_asc:after,
+table.dataTable thead .sorting_asc:before,
+table.dataTable thead .sorting_asc_disabled:after,
+table.dataTable thead .sorting_asc_disabled:before,
+table.dataTable thead .sorting_desc:after,
+table.dataTable thead .sorting_desc:before,
+table.dataTable thead .sorting_desc_disabled:after,
+table.dataTable thead .sorting_desc_disabled:before {
+bottom: .5em;
+}
+</style>
+</head>
+
+<script>
+    $(document).ready(function () {
+        $('#pData').DataTable();
+        $('.dataTables_length').addClass('bs-select');
+        $(".error-message").hide();
+});
+    function viewPatients() {
+        hideAll();
+        $.ajax({
+            url: "/getPatients",
+            type: "GET"
+
+        }).done(function (response) {
+
+            var html = "<table id=pData class='table table-striped table-bordered table-sm' cellspacing=0><thead><tr><th class='th-sm'>Patient Name</th><th class='th-sm'>Gender</th><th class='th-sm'>DOB</th></tr></thead><tbody>";
+
+            response = response.result;
+
+            $.each(response, function (key, val) {
+                
+                var name = val.firstname+"&nbsp;"+val.middleInitial+"&nbsp;"+val.lastname;
+                html += "<tr id="+val.id+" name="+name+" onclick=getSample('"+name+"',this.id)><td>" + val.firstname +"&nbsp;"+ val.middleInitial+"&nbsp;"+ val.lastname+ "</td>"+
+                    "<td>" +val.gender+ "</td>"+
+                    "<td>" +val.dateOfBirth+ "</td>"+
+                    "</tr>"
+            });
+            html += "</tbody></table>";
+            $(".show-data").append(html);
+            $("#vData").remove();
+            $("#sData").remove();
+            $(".show-data").show();
+            $("#pData").show();
+        });
+    };
+
+    function getSample(name,id) {
+        hideAll();
+        $.ajax({
+            url: "/getSample",
+            type: "GET",
+            data: {
+                patientId: id
+            }
+
+        }).done(function (response) {
+            var html = "<h2 id=pName>"+name+"</h2><table id=sData class='table table-striped table-bordered table-sm' cellspacing=0><thead><tr><th class='th-sm'><strong>Sample Type</strong></th><th class='th-sm'><strong>Quality</strong></th><th class='th-sm'><strong>Date</strong></th></tr></thead><tbody>";
+
+            response = response.result;
+            console.log(response.length);
+            if(response.length==0){
+                $(".error-message").show();
+            } else {
+                $.each(response, function (key, val) {
+                html += "<tr id="+val.id+" onclick=getVariant(this.id) ><td>" + val.sampleType +"</td>"+
+                    "<td>" +val.quality+ "</td>"+
+                    "<td>" +val.date+ "</td>"+
+                    "</tr>"
+                });
+                html += "</tbody></table>";
+                
+                $(".show-data").append(html);
+            }
+            $(".show-data").show();
+            $("#vData").remove();
+            $("#pData").remove();
+            $("#pName").show();
+            $("#sData").show();
+            
+        });
+        
+    }
+
+    function getVariant(id) {
+        console.log(id);
+        hideAll();
+        $.ajax({
+            url: "/getVariants",
+            type: "GET",
+            data: {
+                sampleId: id
+            }
+
+        }).done(function (response) {
+            var html = "<table id=vData><thead><tr>"+
+                       "<th><strong>Reference base</strong></th>"+
+                       "<th><strong>Alternative Base</strong></th>"+
+                       "<th><strong>Gene Name</strong></th>"+
+                       "<th><strong>Position</strong></th>"+
+                       "<th><strong>Mutation Type</strong></th>"+
+                       "<th><strong>Allele Frequency</strong></th></thead></tr><tbody>";
+
+            response = response.result;
+            if(response.length==0){
+                $(".error-message").show();
+            }
+            else {
+                $.each(response, function (key, val) {
+                console.log(val);
+                html += "<tr id="+val.id+">"+
+                    "<td>" + val.reference_base +"</td>"+
+                    "<td>" + val.alternativeBase+ "</td>"+
+                    "<td>" + val.geneName+ "</td>"+
+                    "<td>" + val.position +"</td>"+
+                    "<td>" + val.mutationType+ "</td>"+
+                    "<td>" + val.alleleFrequency+ "</td>"+
+                    "</tr>"
+                });
+            }
+            
+            html += "</tbody></table>";
+            $("#pData").remove();
+            $("#sData").remove();
+            $(".show-data").append(html);
+            $(".show-data").show();
+            $("#vData").show();
+        });
+        
+    }
+
+    function hideAll() {
+        $(".show-data").hide();
+        $("#pData").hide();
+        $("#sData").hide();
+        $("#vData").hide();
+        $("#pName").remove();
+        $(".error-message").hide();
+    }
+
+</script>
+<body>
+<button id="clicked" onclick="viewPatients()">View Patients</button>
+<div class="show-data"></div>
+<div class="error-message">Data not found</div>
+</body>
+</html>
