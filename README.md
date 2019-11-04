@@ -9,7 +9,9 @@ Dependency Requirements:
 Browser: 
 Mozzila firefox.
 
-In order to run the application, please clone the code from following link:
+This app has been deployed to heroku platform, please check: https://patient-gway.herokuapp.com/
+
+In order to run the application on local system(I have used MacOS), please clone the code from following link:
 https://github.com/vish-dawange/patient-gateway.git
 
 and run following command: python api.py
